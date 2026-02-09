@@ -1,0 +1,15 @@
+# Ignore backup files
+backups/*.tar.gz
+
+# Ignore config
+config/secrets.yaml
+config/*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
