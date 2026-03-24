@@ -30,7 +30,11 @@ def _read_thermal_zones() -> list[dict]:
             continue
         try:
             millidegrees = int(temp_file.read_text().strip())
-            label = type_file.read_text().strip() if type_file.exists() else zone.name
+            label = (
+                type_file.read_text().strip()
+                if type_file.exists()
+                else zone.name
+            )
             temps.append({
                 "label": label,
                 "current": millidegrees / 1000.0,
