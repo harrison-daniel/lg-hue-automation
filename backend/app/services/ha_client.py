@@ -90,21 +90,62 @@ class HAClient:
     async def activate_scene(self, scene_entity_id: str) -> bool:
         return await self.call_service("scene", "turn_on", scene_entity_id)
 
-    async def set_picture_mode(self, mode: str, entity_id: str | None = None) -> bool:
-        """Set TV picture mode via Luna API (instant, no menu navigation)."""
+    async def send_button(self, button: str, entity_id: str | None = None) -> bool:
         target = entity_id or settings.ha_tv_entity
         return await self.call_service(
             domain="webostv",
-            service="command",
+            service="button",
             entity_id=target,
-            data={
-                "command": "ssap://com.webos.settingsservice/setSystemSettings",
-                "payload": {
-                    "category": "picture",
-                    "settings": {"pictureMode": mode},
-                },
-            },
+            data={"button": button},
         )
+
+    async def set_picture_mode(self, mode: str, entity_id: str | None = None) -> bool:
+        """Set TV picture mode via button navigation."""
+        import asyncio
+
+        target = entity_id or settings.ha_tv_entity
+
+        # LG C1 picture mode menu positions from top:
+        # Vivid(0), Standard(1), Eco(2), Cinema(3),
+        # Sports(4), Game(5), Filmmaker(6)
+        mode_positions = {
+            "vivid": 0,
+            "standard": 1,
+            "eco": 2,
+            "cinema": 3,
+            "sports": 4,
+            "game": 5,
+            "filmmaker": 6,
+        }
+
+        position = mode_positions.get(mode)
+        if position is None:
+            logger.error(f"Unknown picture mode: {mode}")
+            return False
+
+        steps = [
+            ("MENU", 1.5),
+            ("DOWN", 0.4),
+            ("ENTER", 0.8),
+            ("ENTER", 0.8),
+        ]
+
+        # Navigate to the correct mode position
+        for _ in range(position):
+            steps.append(("DOWN", 0.3))
+
+        steps.append(("ENTER", 0.5))
+        steps.append(("EXIT", 0))
+
+        for button, delay in steps:
+            success = await self.send_button(button, target)
+            if not success:
+                logger.error(f"Button press failed: {button}")
+                return False
+            if delay > 0:
+                await asyncio.sleep(delay)
+
+        return True
 
     async def set_light(
         self,
