@@ -30,17 +30,15 @@ def _read_thermal_zones() -> list[dict]:
             continue
         try:
             millidegrees = int(temp_file.read_text().strip())
-            label = (
-                type_file.read_text().strip()
-                if type_file.exists()
-                else zone.name
+            label = type_file.read_text().strip() if type_file.exists() else zone.name
+            temps.append(
+                {
+                    "label": label,
+                    "current": millidegrees / 1000.0,
+                    "high": None,
+                    "critical": None,
+                }
             )
-            temps.append({
-                "label": label,
-                "current": millidegrees / 1000.0,
-                "high": None,
-                "critical": None,
-            })
         except (ValueError, OSError):
             continue
 
@@ -55,12 +53,14 @@ def get_cpu_temperatures() -> list[dict]:
             temps = []
             for _chip, entries in sensor_data.items():
                 for entry in entries:
-                    temps.append({
-                        "label": entry.label or "CPU",
-                        "current": entry.current,
-                        "high": entry.high,
-                        "critical": entry.critical,
-                    })
+                    temps.append(
+                        {
+                            "label": entry.label or "CPU",
+                            "current": entry.current,
+                            "high": entry.high,
+                            "critical": entry.critical,
+                        }
+                    )
             return temps
     except (AttributeError, OSError):
         # psutil.sensors_temperatures() not available on this platform

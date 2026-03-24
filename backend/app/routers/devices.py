@@ -27,9 +27,7 @@ async def get_device_status():
 
     for entity_id in settings.light_entity_list:
         light_status = await ha_client.get_device_status(entity_id)
-        light_name = light_status.get("attributes", {}).get(
-            "friendly_name", entity_id
-        )
+        light_name = light_status.get("attributes", {}).get("friendly_name", entity_id)
         devices.append(
             DeviceStatus(
                 name=light_name,
