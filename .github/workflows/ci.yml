@@ -16,6 +16,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff
+      - name: Show import fix diff (debug)
+        working-directory: backend
+        run: ruff check . --select I --diff || true
       - name: Lint
         working-directory: backend
         run: ruff check .
