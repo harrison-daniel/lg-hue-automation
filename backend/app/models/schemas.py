@@ -1,11 +1,11 @@
 """Pydantic models for API request/response validation."""
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 
-class DeviceType(str, Enum):
+class DeviceType(StrEnum):
     TV = "tv"
     HUE = "hue"
 

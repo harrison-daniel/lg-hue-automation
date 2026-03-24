@@ -3,7 +3,7 @@
 from fastapi import APIRouter
 
 from app.config import settings
-from app.models.schemas import DeviceStatus, DevicesResponse, DeviceType
+from app.models.schemas import DeviceStatus, DeviceType, DevicesResponse
 from app.services.ha_client import ha_client
 
 router = APIRouter(prefix="/api/devices", tags=["devices"])
