@@ -14,8 +14,10 @@ CONTAINER_SYS_THERMAL = Path("/sys/class/thermal")
 
 
 def _read_thermal_zones() -> list[dict]:
-    """Fallback: read CPU temps directly from sysfs when psutil sensors are unavailable."""
-    thermal_base = HOST_SYS_THERMAL if HOST_SYS_THERMAL.exists() else CONTAINER_SYS_THERMAL
+    """Read CPU temps directly from sysfs (fallback for Docker)."""
+    thermal_base = (
+        HOST_SYS_THERMAL if HOST_SYS_THERMAL.exists() else CONTAINER_SYS_THERMAL
+    )
     temps = []
 
     if not thermal_base.exists():
@@ -29,7 +31,12 @@ def _read_thermal_zones() -> list[dict]:
         try:
             millidegrees = int(temp_file.read_text().strip())
             label = type_file.read_text().strip() if type_file.exists() else zone.name
-            temps.append({"label": label, "current": millidegrees / 1000.0, "high": None, "critical": None})
+            temps.append({
+                "label": label,
+                "current": millidegrees / 1000.0,
+                "high": None,
+                "critical": None,
+            })
         except (ValueError, OSError):
             continue
 

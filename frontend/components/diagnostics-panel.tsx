@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import { getDiagnostics, type DiagnosticsResponse } from "@/lib/api";
 
-function TempColor(temp: number): string {
+function getTempColor(temp: number): string {
   if (temp >= 80) return "var(--error)";
   if (temp >= 60) return "#f59e0b";
   return "var(--success)";
 }
 
 function UsageBar({ percent, label }: { percent: number; label: string }) {
-  const color = percent >= 85 ? "var(--error)" : percent >= 70 ? "#f59e0b" : "var(--accent)";
+  const color =
+    percent >= 85 ? "var(--error)" : percent >= 70 ? "#f59e0b" : "var(--accent)";
   return (
     <div className="flex-1 min-w-[120px]">
-      <div className="flex justify-between text-xs mb-1" style={{ color: "var(--text-secondary)" }}>
+      <div
+        className="flex justify-between text-xs mb-1"
+        style={{ color: "var(--text-secondary)" }}
+      >
         <span>{label}</span>
         <span>{percent.toFixed(0)}%</span>
       </div>
@@ -33,7 +37,7 @@ export default function DiagnosticsPanel() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    async function fetch_() {
+    async function fetchData() {
       try {
         const d = await getDiagnostics();
         setData(d);
@@ -42,16 +46,17 @@ export default function DiagnosticsPanel() {
         setError(true);
       }
     }
-    fetch_();
-    const interval = setInterval(fetch_, 30_000);
+    fetchData();
+    const interval = setInterval(fetchData, 30_000);
     return () => clearInterval(interval);
   }, []);
 
   if (error || !data) return null;
 
-  const maxTemp = data.cpu_temps.length > 0
-    ? Math.max(...data.cpu_temps.map((t) => t.current))
-    : null;
+  const maxTemp =
+    data.cpu_temps.length > 0
+      ? Math.max(...data.cpu_temps.map((t) => t.current))
+      : null;
 
   return (
     <div
@@ -66,13 +71,18 @@ export default function DiagnosticsPanel() {
         <div className="flex items-center gap-3">
           <span>Server</span>
           {maxTemp !== null && (
-            <span style={{ color: TempColor(maxTemp) }}>
+            <span style={{ color: getTempColor(maxTemp) }}>
               {maxTemp.toFixed(0)}°C
             </span>
           )}
           <span>{data.uptime_human}</span>
         </div>
-        <span className="transition-transform duration-200" style={{ transform: collapsed ? "rotate(0)" : "rotate(180deg)" }}>
+        <span
+          className="transition-transform duration-200"
+          style={{
+            transform: collapsed ? "rotate(0)" : "rotate(180deg)",
+          }}
+        >
           ▾
         </span>
       </button>
@@ -84,12 +94,15 @@ export default function DiagnosticsPanel() {
           <UsageBar percent={data.disk.percent} label="Disk" />
           {data.cpu_temps.length > 0 && (
             <div className="flex-1 min-w-[120px]">
-              <div className="text-xs mb-1" style={{ color: "var(--text-secondary)" }}>
+              <div
+                className="text-xs mb-1"
+                style={{ color: "var(--text-secondary)" }}
+              >
                 Temperatures
               </div>
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
                 {data.cpu_temps.map((t, i) => (
-                  <span key={i} style={{ color: TempColor(t.current) }}>
+                  <span key={i} style={{ color: getTempColor(t.current) }}>
                     {t.label}: {t.current.toFixed(0)}°C
                   </span>
                 ))}

@@ -53,7 +53,7 @@ def get_scene_by_name(name: str) -> dict | None:
 
 
 async def _execute_action(action: dict) -> str | None:
-    """Execute a single scene action. Returns None on success, error string on failure."""
+    """Execute a single scene action. Returns error string on failure."""
     action_type = action["type"]
     target = action["target"]
     description = action.get("description", target)
@@ -123,7 +123,7 @@ async def activate_scene(name: str) -> SceneActivateResponse:
         message=(
             f"Scene '{scene['display_name']}' activated successfully"
             if not errors
-            else f"Scene '{scene['display_name']}' completed with {len(errors)} error(s)"
+            else f"Scene '{scene['display_name']}' had {len(errors)} error(s)"
         ),
         errors=errors,
     )
