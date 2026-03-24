@@ -1,0 +1,98 @@
+# Kubernetes Deployment — Backend
+# ================================
+# A Deployment manages a set of identical pods (containers).
+# It handles: creating pods, restarting crashed pods, rolling updates.
+#
+# This is a REFERENCE manifest — not deployed in this project.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lg-hue-backend
+  labels:
+    app: lg-hue-backend
+spec:
+  # Number of identical backend pods to run.
+  # In production, you'd increase this for redundancy/load balancing.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lg-hue-backend
+  template:
+    metadata:
+      labels:
+        app: lg-hue-backend
+    spec:
+      containers:
+        - name: backend
+          image: lg-hue-backend:latest
+          ports:
+            - containerPort: 8000
+          # Environment variables from a ConfigMap (non-secret) and Secret
+          envFrom:
+            - configMapRef:
+                name: lg-hue-config
+            - secretRef:
+                name: lg-hue-secrets
+          # Health checks — K8s uses these to know if the pod is healthy.
+          # livenessProbe: restart the pod if this fails repeatedly.
+          # readinessProbe: stop sending traffic if this fails.
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          # Resource limits — prevent the container from consuming
+          # all available CPU/RAM on the node.
+          resources:
+            requests:
+              cpu: 100m      # 0.1 CPU cores
+              memory: 128Mi
+            limits:
+              cpu: 500m      # 0.5 CPU cores max
+              memory: 256Mi
+
+---
+# Service — exposes the backend pods within the cluster.
+# Other pods (like nginx) connect to this service name
+# instead of individual pod IPs (which change on restart).
+apiVersion: v1
+kind: Service
+metadata:
+  name: lg-hue-backend
+spec:
+  selector:
+    app: lg-hue-backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+
+---
+# ConfigMap — non-secret configuration values.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lg-hue-config
+data:
+  HA_URL: "http://homeassistant:8123"
+  HA_TV_ENTITY: "media_player.lg_webos_smart_tv"
+  HA_LIGHT_ENTITIES: "light.living_room,light.bedroom"
+
+---
+# Secret — sensitive values (tokens, passwords).
+# In real K8s, you'd use a secrets manager (AWS Secrets Manager,
+# HashiCorp Vault, etc.) instead of storing secrets in YAML.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lg-hue-secrets
+type: Opaque
+stringData:
+  HA_TOKEN: "your-ha-token-here"

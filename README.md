@@ -1,4 +1,156 @@
-# LG TV webOS & Philips Hue Automation
+# LG TV + Philips Hue Home Automation
 
-## Home Assistent automation server running on Ubuntu, controlling both tv picture settings and hue lights
+One-click control of LG C1 TV picture modes and Philips Hue smart lights — built with a custom Python API and React dashboard running on a repurposed MacBook Air Ubuntu server.
 
+![CI](https://github.com/YOUR_USERNAME/lg-hue-automation/actions/workflows/ci.yml/badge.svg)
+
+## The Problem
+
+Changing my TV's picture mode requires navigating 4+ submenus (Settings → Picture → Picture Mode → Cinema/Game/Standard), and coordinating room lighting means opening a separate app. I wanted one-click scenes that change both simultaneously.
+
+## The Solution
+
+A custom automation stack that combines TV picture settings and room lighting into single-action scenes:
+
+| Scene | TV | Lights |
+|-------|-----|--------|
+| **Night - TV** | Cinema mode (warm, low backlight) | Dim warm (15%) |
+| **Night - Gaming** | Game mode (low latency, VRR) | Very dim (10%) |
+| **Day - TV** | Standard mode (bright, vivid) | Bright neutral (80%) |
+| **All Off** | No change | All lights off |
+
+## Architecture
+
+```
+┌───────────────────────────────────────────────────────────┐
+│  Ubuntu Server 24.04 LTS (MacBook Air) — IoT VLAN        │
+│                                                           │
+│  ┌──────────┐  ┌──────────────┐  ┌──────────────────────┐│
+│  │  Nginx   │→ │  Next.js     │  │  Home Assistant      ││
+│  │  :80     │  │  Dashboard   │  │  (Docker)            ││
+│  │          │→ │  :3000       │  │  :8123               ││
+│  │          │  └──────────────┘  │                      ││
+│  │          │→ ┌──────────────┐  │  aiowebostv (HA org) ││
+│  │          │  │  FastAPI     │→ │  aiohue (HA org)     ││
+│  │          │  │  Backend     │  │                      ││
+│  └──────────┘  │  :8000      │  └──────────┬───────────┘│
+│                └──────────────┘             │            │
+└────────────────────────────────────────────┼────────────┘
+                                             │
+                                  ┌──────────┴──────────┐
+                                  │                     │
+                             ┌────▼──┐            ┌─────▼─────┐
+                             │ LG C1 │            │Hue Bridge │
+                             │WS:3001│            │HTTPS REST │
+                             └───────┘            └───────────┘
+```
+
+## Tech Stack
+
+| Layer | Technology | Why |
+|-------|-----------|-----|
+| **Backend API** | Python 3.12 + FastAPI | Async, auto-generated API docs, Pydantic validation |
+| **Frontend** | Next.js 15 + Tailwind CSS | React with server components, responsive grid |
+| **TV Control** | Home Assistant + aiowebostv | HA org-maintained library, WebSocket/SSAP protocol |
+| **Light Control** | Home Assistant + aiohue | HA org-maintained library, official Hue API v2 |
+| **Orchestration** | Docker Compose | Declarative multi-container management |
+| **Reverse Proxy** | Nginx | Single entry point, standard production pattern |
+| **CI/CD** | GitHub Actions | Automated linting, testing, Docker builds |
+| **Server** | Ubuntu 24.04 LTS | SSH key auth, UFW firewall, unattended upgrades |
+
+## Project Structure
+
+```
+├── backend/                # FastAPI Python backend
+│   ├── app/
+│   │   ├── main.py         # FastAPI app entry point
+│   │   ├── config.py       # Environment variable loading
+│   │   ├── routers/        # API endpoint definitions
+│   │   ├── services/       # HA client, scene engine
+│   │   └── models/         # Pydantic schemas
+│   ├── scenes/
+│   │   └── scenes.yaml     # Scene definitions
+│   ├── tests/              # pytest test suite
+│   └── Dockerfile
+├── frontend/               # Next.js dashboard
+│   ├── app/                # Next.js App Router pages
+│   ├── components/         # React components
+│   ├── lib/                # API client
+│   └── Dockerfile
+├── nginx/                  # Reverse proxy config
+├── ha-config/              # Home Assistant configuration
+├── k8s/                    # Kubernetes reference manifests
+├── docs/                   # Server setup guide, network docs
+├── docker-compose.yml      # Full stack orchestration
+└── .github/workflows/      # CI pipeline
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/scenes` | List all available scenes |
+| `POST` | `/api/scenes/{name}/activate` | Activate a scene |
+| `GET` | `/api/devices/status` | Device online/offline status |
+| `GET` | `/api/health` | Backend + HA connectivity check |
+
+Interactive API docs available at `/api/docs` (auto-generated by FastAPI).
+
+## Setup
+
+### Prerequisites
+
+- Ubuntu Server with Docker and Docker Compose installed
+- LG webOS TV on the same network
+- Philips Hue Bridge on the same network
+- Home Assistant with both devices paired
+
+### Quick Start
+
+```bash
+# Clone the repo
+git clone https://github.com/YOUR_USERNAME/lg-hue-automation.git
+cd lg-hue-automation
+
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env with your HA token and entity IDs
+
+# Start everything
+docker compose up -d
+
+# Access the dashboard
+open http://<server-ip>
+```
+
+### Server Hardening
+
+See [docs/server-setup.md](docs/server-setup.md) for the complete Ubuntu server security guide (SSH keys, UFW firewall, unattended updates, temperature monitoring).
+
+## Network Security
+
+- **No ports exposed to the internet** — LAN-only application
+- **VLAN-segmented** — server and IoT devices on isolated IoT VLAN (Ubiquiti UniFi)
+- **SSH key-only authentication** — password login disabled
+- **UFW firewall** — only ports 22 (SSH), 80 (HTTP), 8123 (HA) open
+- **Non-root Docker containers** — backend and frontend run as unprivileged users
+- **Environment variable secrets** — HA token in `.env`, never committed to git
+
+## Production Considerations
+
+If this were deployed at scale (multi-user, multi-building):
+
+- **Kubernetes** for container orchestration, auto-scaling, rolling updates ([K8s manifests](k8s/))
+- **TLS/HTTPS** with Let's Encrypt certificates via cert-manager
+- **OAuth2/JWT authentication** for multi-user access control
+- **PostgreSQL** for persistent scene history and user data
+- **Prometheus + Grafana** for monitoring and alerting
+- **Message queue** (Redis/RabbitMQ) for async command execution
+
+## Screenshots
+
+<!-- Add screenshots of the dashboard here -->
+
+## License
+
+MIT

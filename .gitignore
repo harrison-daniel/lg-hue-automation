@@ -1,15 +1,45 @@
-# Ignore backup files
+# Environment variables (contains HA token, never commit)
+.env
+
+# Home Assistant config (contains device keys, auth data)
+ha-config/
+!ha-config/.gitkeep
+
+# Claude Code internal files
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Node.js
+node_modules/
+.next/
+frontend/.next/
+frontend/node_modules/
+
+# Docker
+*.log
+
+# Backups
 backups/*.tar.gz
 
-# Ignore config
+# Config secrets
 config/secrets.yaml
 config/*.db
 
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Editor files
 *.swp
 *.swo
 *~
+.vscode/
+.idea/

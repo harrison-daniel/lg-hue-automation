@@ -1,0 +1,132 @@
+scenes:
+  - name: day-tv
+    display_name: "Day - TV"
+    description: "Bright lights, standard picture mode for daytime."
+    icon: "☀️"
+    time_of_day: day
+    actions:
+      - type: tv_mode
+        target: standard
+        description: "Set TV to Standard picture mode"
+      - type: light
+        target: light.living_room
+        brightness_pct: 80
+        color_temp_kelvin: 4000
+        description: "Bright living room — neutral white"
+      - type: light
+        target: light.bedroom
+        brightness_pct: 60
+        color_temp_kelvin: 4000
+        description: "Medium bedroom light"
+
+  - name: day-movie
+    display_name: "Day - Movie"
+    description: "Cinema picture mode with moderate lighting for daytime."
+    icon: "🎬"
+    time_of_day: day
+    actions:
+      - type: tv_mode
+        target: cinema
+        description: "Set TV to Cinema picture mode"
+      - type: light
+        target: light.living_room
+        brightness_pct: 50
+        color_temp_kelvin: 3500
+        description: "Moderate living room — warm neutral"
+      - type: light
+        target: light.bedroom
+        brightness_pct: 30
+        color_temp_kelvin: 3500
+        description: "Low bedroom light"
+
+  - name: day-gaming
+    display_name: "Day - Gaming"
+    description: "Game mode with bright lights. Low input lag, VRR enabled."
+    icon: "🕹️"
+    time_of_day: day
+    actions:
+      - type: tv_mode
+        target: game
+        description: "Set TV to Game picture mode"
+      - type: light
+        target: light.living_room
+        brightness_pct: 70
+        color_temp_kelvin: 4000
+        description: "Bright living room — neutral white"
+      - type: light
+        target: light.bedroom
+        brightness_pct: 40
+        color_temp_kelvin: 4000
+        description: "Medium bedroom light"
+
+  - name: night-tv
+    display_name: "Night - TV"
+    description: "Dim lights, warm tones. Cinema mode on TV."
+    icon: "🌙"
+    time_of_day: night
+    actions:
+      - type: tv_mode
+        target: cinema
+        description: "Set TV to Cinema picture mode"
+      - type: light
+        target: light.living_room
+        brightness_pct: 15
+        color_temp_kelvin: 2700
+        description: "Dim living room — warm white"
+      - type: light
+        target: light.bedroom
+        brightness_pct: 0
+        description: "Turn off bedroom light"
+
+  - name: night-movie
+    display_name: "Night - Movie"
+    description: "Very dim warm lights. Cinema mode for immersive viewing."
+    icon: "🍿"
+    time_of_day: night
+    actions:
+      - type: tv_mode
+        target: filmmaker
+        description: "Set TV to Filmmaker picture mode"
+      - type: light
+        target: light.living_room
+        brightness_pct: 8
+        color_temp_kelvin: 2200
+        description: "Very dim living room — extra warm"
+      - type: light
+        target: light.bedroom
+        brightness_pct: 0
+        description: "Turn off bedroom light"
+
+  - name: night-gaming
+    display_name: "Night - Gaming"
+    description: "Low lights, game mode. Low input lag, VRR enabled."
+    icon: "🎮"
+    time_of_day: night
+    actions:
+      - type: tv_mode
+        target: game
+        description: "Set TV to Game picture mode"
+      - type: light
+        target: light.living_room
+        brightness_pct: 10
+        color_temp_kelvin: 3000
+        description: "Very dim living room"
+      - type: light
+        target: light.bedroom
+        brightness_pct: 0
+        description: "Turn off bedroom light"
+
+  - name: all-off
+    display_name: "All Off"
+    description: "Turn off all lights. TV unchanged."
+    icon: "⬛"
+    time_of_day: any
+    actions:
+      - type: light
+        target: light.living_room
+        brightness_pct: 0
+        description: "Turn off living room"
+      - type: light
+        target: light.bedroom
+        brightness_pct: 0
+        description: "Turn off bedroom"
